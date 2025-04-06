@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Message Labeling Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+      background: #f8f9fa;
+    }
+
+    .message-box {
+      font-size: 1.5rem;
+      background: #ffffff;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .input-group {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      flex-grow: 1;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .status {
+      margin-top: 1rem;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="message-box" id="message">Loading message...</div>
+
+  <div class="input-group">
+    <input type="text" id="label" placeholder="Enter category here..." />
+    <button onclick="submitLabel()">Save & Next</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <script>
+    let currentIndex = 0;
+
+    function loadMessage(index) {
+      fetch(`/message/${index}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.done) {
+            document.getElementById("message").innerText = "🎉 All messages labeled!";
+            document.getElementById("label").style.display = "none";
+          } else {
+            document.getElementById("message").innerText = data.message;
+            document.getElementById("label").value = data.label || "";
+            document.getElementById("status").innerText = "";
+          }
+        });
+    }
+
+    function submitLabel() {
+      const label = document.getElementById("label").value;
+      fetch('/label', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ index: currentIndex, label: label })
+      })
+        .then(res => res.json())
+        .then(() => {
+          document.getElementById("status").innerText = "Saved!";
+          currentIndex++;
+          loadMessage(currentIndex);
+        });
+    }
+
+    // Load the first message
+    loadMessage(currentIndex);
+  </script>
+
+</body>
+</html>
